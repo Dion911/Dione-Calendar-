@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>2026 Year Planner — Recovery Build</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <style>
+    :root{--bg:#fff;--text:#111;--muted:#666;--line:#e6e6e6;--safeT:env(safe-area-inset-top,0px);--safeB:env(safe-area-inset-bottom,0px);font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Arial,sans-serif;}
+    body{margin:0;background:var(--bg);color:var(--text);}
+    .top{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid var(--line);padding:12px 12px calc(10px + var(--safeT));}
+    .title{font-weight:900;font-size:14px;}
+    .banner{margin-top:8px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fafafa;font-size:12px;color:#111;line-height:1.35}
+    .ok{color:#0a7a2f;font-weight:700}
+    .bad{color:#b00020;font-weight:800}
+    .page{padding:12px 12px calc(72px + var(--safeB));}
+    .card{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fff;}
+    .muted{color:var(--muted)}
+    .btn{border:1px solid var(--line);background:#fff;border-radius:12px;padding:10px 12px;font-size:13px;cursor:pointer}
+    .btn:hover{background:#f3f3f3}
+    pre{white-space:pre-wrap;word-break:break-word;margin:8px 0 0;font-size:12px;background:#0b0b0b;color:#fff;padding:10px;border-radius:12px;max-height:40vh;overflow:auto}
+  </style>
+</head>
+<body>
+  <div class="top">
+    <div class="title">2026 Planner — Recovery Build</div>
+    <div id="status" class="banner">
+      HTML loaded: <span class="ok">YES</span><br>
+      JS loaded: <span id="jsFlag" class="bad">NO (waiting…)</span><br>
+      Render status: <span id="renderFlag" class="bad">NOT STARTED</span><br>
+      <span class="muted">If you only see a blank page on GitHub Pages, your deployed file isn’t this one (or cache/service worker is hijacking).</span>
+    </div>
+  </div>
+
+  <div class="page">
+    <div class="card">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-weight:900">Debug Panel</div>
+          <div class="muted" style="font-size:12px">This build forces visible output even if the main app crashes.</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn" id="clearBtn" type="button">Clear site cache + SW</button>
+          <button class="btn" id="reloadBtn" type="button">Hard reload</button>
+        </div>
+      </div>
+      <div id="env" class="banner" style="margin-top:12px"></div>
+      <div id="errWrap" class="banner" style="margin-top:12px;display:none">
+        <div><span class="bad">App Error captured</span> (copy/paste this to me)</div>
+        <pre id="errText"></pre>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  const $ = (id)=>document.getElementById(id);
+  const setOk = (el, text)=>{ el.textContent=text; el.className="ok"; };
+  const setBad = (el, text)=>{ el.textContent=text; el.className="bad"; };
+
+  // Mark JS running
+  setOk($("jsFlag"), "YES");
+
+  // Environment info
+  const env = $("env");
+  env.innerHTML =
+    "URL: <span class='muted'>" + location.href + "</span><br>" +
+    "Protocol: <span class='muted'>" + location.protocol + "</span><br>" +
+    "UserAgent: <span class='muted'>" + navigator.userAgent + "</span><br>" +
+    "SW supported: <span class='muted'>" + ("serviceWorker" in navigator) + "</span>";
+
+  // Error capture (shows on-screen)
+  function showErr(title, detail){
+    setBad($("renderFlag"), "FAILED");
+    const wrap = $("errWrap");
+    wrap.style.display="block";
+    $("errText").textContent = title + "\n\n" + (detail || "");
+  }
+  window.addEventListener("error", (e)=>{
+    showErr("window.onerror: " + (e.message||"Unknown"), (e.error && e.error.stack) ? e.error.stack : (e.filename||"") + ":" + (e.lineno||"") + ":" + (e.colno||""));
+  });
+  window.addEventListener("unhandledrejection", (e)=>{
+    const reason = e.reason;
+    showErr("Unhandled promise rejection", reason && reason.stack ? reason.stack : String(reason));
+  });
+
+  // Clear cache + service worker
+  async function clearAll(){
+    try{
+      // unregister SW
+      if("serviceWorker" in navigator){
+        const regs = await navigator.serviceWorker.getRegistrations();
+        for(const r of regs) await r.unregister();
+      }
+      // clear caches
+      if(window.caches && caches.keys){
+        const keys = await caches.keys();
+        for(const k of keys) await caches.delete(k);
+      }
+      // clear local storage (optional, safe for debug)
+      try{ localStorage.clear(); }catch(_){}
+      alert("Cleared Service Worker + Cache + localStorage. Now reload in a Private tab if on iOS.");
+    }catch(err){
+      showErr("Clear failed", err && err.stack ? err.stack : String(err));
+    }
+  }
+  $("clearBtn").addEventListener("click", clearAll);
+  $("reloadBtn").addEventListener("click", ()=>location.reload(true));
+
+  // Minimal render tick (proves JS can update DOM)
+  try{
+    setOk($("renderFlag"), "RUNNING");
+    // A tiny visible render so it never appears empty:
+    const p = document.createElement("div");
+    p.className="banner";
+    p.style.marginTop="12px";
+    p.innerHTML = "<span class='ok'>Render OK:</span> This page proves GitHub Pages is serving the latest HTML and JS is executing.";
+    document.querySelector(".page").appendChild(p);
+  }catch(err){
+    showErr("Render init failed", err && err.stack ? err.stack : String(err));
+  }
+
+  // IMPORTANT: do NOT register any service worker in recovery build.
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "2026 Planner",
+  "short_name": "2026 Planner",
+  "description": "Minimal offline-first 2026 calendar planner",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
