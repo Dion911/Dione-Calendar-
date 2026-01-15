@@ -261,6 +261,12 @@
   }
 }
 
+
+/* === Scroll fix: ensure Notes reachable === */
+.sheetBody{
+  padding-bottom: calc(140px + var(--kb)); /* space for footer + keyboard */
+}
+
 </style>
 </head>
 <body>
@@ -1463,7 +1469,7 @@ if(e.key==="/" && !e.metaKey && !e.ctrlKey){
     if(t && t.matches && t.matches("input, textarea, [contenteditable='true']")){
       setTimeout(updateKB, 50);
       setTimeout(function(){
-        try{ t.scrollIntoView({block:"center", behavior:"smooth"}); }catch(_){}
+        try{ t.scrollIntoView({block:"nearest"}); }catch(_){}
       }, 120);
     }
   });
