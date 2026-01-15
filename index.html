@@ -939,7 +939,7 @@ if(e.key==="/" && !e.metaKey && !e.ctrlKey){
 
         <div style="margin-top:8px">
           <div style="font-size:11px;color:var(--muted);margin:2px 0 4px">Notes</div>
-          <textarea id="tNotes" class="input" style="width:100%">${escapeHtml(state.form.notes||"")}</textarea>
+          <textarea id="tNotes" class="input" style="width:100%;min-height:120px;resize:vertical">${escapeHtml(state.form.notes||"")}</textarea>
         </div>
 
         <div class="divider"></div>
@@ -964,12 +964,15 @@ if(e.key==="/" && !e.metaKey && !e.ctrlKey){
     $("newTaskBtn").onclick = startNewTask;
 
     const tTitle = $("tTitle");
-    // === Quick Capture: autofocus Title on mobile/touch ===
+    // === Quick Capture: autofocus Title on mobile/touch (safe) ===
+    // Only when opening a fresh "Add" form (not when editing, not when user is scrolling).
     try{
       const isTouch = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
       if(isTouch && !isEdit && tTitle){
-        setTimeout(()=>{ tTitle.focus({preventScroll:true}); }, 60);
-        setTimeout(()=>{ tTitle.scrollIntoView({block:"center", behavior:"smooth"}); }, 120);
+        // focus without forcing scroll-jumps
+        setTimeout(()=>{ 
+          if(document.activeElement !== tTitle) tTitle.focus({preventScroll:true}); 
+        }, 60);
       }
     }catch(e){}
 
@@ -1031,9 +1034,6 @@ if(e.key==="/" && !e.metaKey && !e.ctrlKey){
       row.querySelector("[data-act='del']").onclick = (e)=>{ e.stopPropagation(); del(t.id); };
       list.appendChild(row);
     });
-
-    // focus
-    setTimeout(()=> tTitle.focus(), 0);
   }
 
 
