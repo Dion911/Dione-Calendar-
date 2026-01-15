@@ -222,6 +222,45 @@
     .sheetTop{position:sticky; top:0; z-index:6; background:#fff; padding-bottom:8px;}
     #closeBtn{min-height:44px; padding:10px 14px;}
 
+
+/* === Mobile UX: Thumb-reach actions + keyboard-safe footer === */
+.sheetFooter{
+  position: sticky;
+  bottom: 0;
+  background: #fff;
+  z-index: 3;
+  padding-bottom: calc(10px + var(--safeB));
+  border-top: 1px solid var(--line);
+}
+.sheetFooter .row{gap:10px}
+.sheetFooter .btn{
+  min-height: 46px;
+  font-size: 14px;
+  flex: 1;
+}
+.sheetFooter .btn.primary{
+  flex: 1.3;
+}
+@media (pointer: coarse){
+  /* remove the floating Done button on mobile; footer already has Done */
+  #sheetDoneFab{display:none !important;}
+}
+
+
+/* === Mobile UX: Keyboard-aware padding === */
+:root{
+  --safeB: env(safe-area-inset-bottom, 0px);
+  --kb: 0px; /* keyboard height */
+}
+@media (pointer: coarse){
+  .sheetBody{
+    padding-bottom: calc(16px + var(--kb));
+  }
+  .sheetFooter{
+    padding-bottom: calc(10px + var(--safeB) + var(--kb));
+  }
+}
+
 </style>
 </head>
 <body>
@@ -578,9 +617,20 @@ if(e.key==="/" && !e.metaKey && !e.ctrlKey){
     if(overlayEl){ overlayEl.remove(); overlayEl=null; }
   }
   function startNewTask(){
+  // Quick Capture: startNewTask focus (mobile)
+
     state.editingId = null;
     state.form = { ...state.form, title:"", notes:"", time:"", status:"todo" };
     renderDrawer();
+    // Quick Capture: focus title after opening form
+    try{
+      const isTouch = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+      if(isTouch){
+        setTimeout(()=>{ const el=document.getElementById("tTitle"); if(el) el.focus({preventScroll:true}); }, 80);
+        setTimeout(()=>{ const el=document.getElementById("tTitle"); if(el) el.scrollIntoView({block:"center"}); }, 140);
+      }
+    }catch(e){}
+
     const t=$("tTitle"); if(t) t.focus();
   }
   function startEdit(task){
@@ -908,6 +958,15 @@ if(e.key==="/" && !e.metaKey && !e.ctrlKey){
     $("newTaskBtn").onclick = startNewTask;
 
     const tTitle = $("tTitle");
+    // === Quick Capture: autofocus Title on mobile/touch ===
+    try{
+      const isTouch = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+      if(isTouch && !isEdit && tTitle){
+        setTimeout(()=>{ tTitle.focus({preventScroll:true}); }, 60);
+        setTimeout(()=>{ tTitle.scrollIntoView({block:"center", behavior:"smooth"}); }, 120);
+      }
+    }catch(e){}
+
     const tNotes = $("tNotes");
     const tTime = $("tTime");
     const tStatus = $("tStatus");
@@ -1370,5 +1429,48 @@ if(e.key==="/" && !e.metaKey && !e.ctrlKey){
 })();
 </script>
 
+<script>
+/* === Mobile UX: Keyboard-aware padding (iOS Safari/PWA) === */
+(function(){
+  const mq = window.matchMedia ? window.matchMedia("(pointer: coarse)") : null;
+  const isTouch = mq ? mq.matches : false;
+  if(!isTouch) return;
+
+  const root = document.documentElement;
+
+  function updateKB(){
+    try{
+      const vv = window.visualViewport;
+      if(!vv){
+        root.style.setProperty("--kb","0px");
+        return;
+      }
+      const kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      root.style.setProperty("--kb", kb + "px");
+    }catch(e){
+      root.style.setProperty("--kb","0px");
+    }
+  }
+
+  if(window.visualViewport){
+    window.visualViewport.addEventListener("resize", updateKB);
+    window.visualViewport.addEventListener("scroll", updateKB);
+  }
+  window.addEventListener("orientationchange", function(){ setTimeout(updateKB, 250); });
+
+  document.addEventListener("focusin", function(e){
+    const t = e.target;
+    if(t && t.matches && t.matches("input, textarea, [contenteditable='true']")){
+      setTimeout(updateKB, 50);
+      setTimeout(function(){
+        try{ t.scrollIntoView({block:"center", behavior:"smooth"}); }catch(_){}
+      }, 120);
+    }
+  });
+  document.addEventListener("focusout", function(){ setTimeout(updateKB, 50); });
+
+  updateKB();
+})();
+</script>
 </body>
 </html>
