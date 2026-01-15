@@ -267,6 +267,14 @@
   padding-bottom: calc(140px + var(--kb)); /* space for footer + keyboard */
 }
 
+
+/* === Mobile UX: Drawer scroll + footer space fix === */
+.sheet{display:flex;flex-direction:column;}
+.sheetBody{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+@media (pointer: coarse){
+  .sheetBody{padding-bottom: calc(240px + var(--kb, 0px));}
+}
+
 </style>
 </head>
 <body>
@@ -1354,7 +1362,8 @@ if(e.key==="/" && !e.metaKey && !e.ctrlKey){
           </div>
           <div class="pill"><span class="dot" style="--c:${escapeAttr(t.color||DEFAULT_COLOR)}"></span></div>
         `;
-        el.onclick = ()=> openDrawerForDate(k);
+        const _id = t.id;
+        el.onclick = ()=>{ openDrawerForDate(k); setTimeout(()=>{ const tt=(state.tasksByDate[k]||[]).find(x=>x.id===_id); if(tt) startEdit(tt); }, 0); };
         body.appendChild(el);
       });
     });
