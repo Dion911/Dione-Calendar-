@@ -222,29 +222,6 @@
     .sheetTop{position:sticky; top:0; z-index:6; background:#fff; padding-bottom:8px;}
     #closeBtn{min-height:44px; padding:10px 14px;}
 
-
-/* === Mobile iOS Safe Sheet Fixes === */
-.sheet {
-  transform: none !important;
-  display: flex;
-  flex-direction: column;
-}
-.sheetHeader {
-  position: sticky;
-  top: 0;
-  background: #fff;
-  z-index: 2;
-}
-.sheetBody {
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-  flex: 1;
-}
-.sheet.dragging {
-  transform: translateY(var(--dragY, 0));
-}
-
 </style>
 </head>
 <body>
@@ -485,7 +462,15 @@
 
   // Keyboard shortcuts (desktop)
   window.addEventListener("keydown", (e)=>{
-    if(e.key==="/" && !e.metaKey && !e.ctrlKey){
+      // Ignore shortcuts while typing in inputs/textarea/select or editable areas
+    const ae = document.activeElement;
+    if(ae && (ae.matches && ae.matches("input, textarea, select, [contenteditable=\"true\"]"))){
+      return;
+    }
+    // Mobile-first: disable global shortcuts on touch devices (keeps keyboard typing intact)
+    const isTouch = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+    if(isTouch) return;
+if(e.key==="/" && !e.metaKey && !e.ctrlKey){
       e.preventDefault();
       state.searchOpen = true;
       searchRow.classList.remove("hide");
@@ -1371,36 +1356,6 @@
   // Initial render
   render();
 })();
-
-/* === Mobile iOS Safe Sheet JS Fix === */
-(function(){
-  const sheet = document.querySelector('.sheet');
-  const body = document.querySelector('.sheetBody');
-  if(!sheet || !body) return;
-
-  let startY = 0, dragging = false;
-
-  sheet.addEventListener('touchstart', (e)=>{
-    if (e.target.closest('input, textarea, select')) return;
-    dragging = true;
-    sheet.classList.add('dragging');
-    startY = e.touches[0].clientY;
-  }, {passive:true});
-
-  sheet.addEventListener('touchmove', (e)=>{
-    if(!dragging) return;
-    const dy = e.touches[0].clientY - startY;
-    if (body.scrollTop > 0) return;
-    sheet.style.setProperty('--dragY', Math.max(0, dy) + 'px');
-  }, {passive:true});
-
-  sheet.addEventListener('touchend', ()=>{
-    dragging = false;
-    sheet.classList.remove('dragging');
-    sheet.style.removeProperty('--dragY');
-  });
-})();
-
 </script>
 
 <script>
