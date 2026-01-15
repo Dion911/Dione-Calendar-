@@ -2,125 +2,1365 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
-  <title>2026 Year Planner — Recovery Build</title>
+  <title>2026 Year Planner (Offline iPhone Safe)</title>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
   <style>
-    :root{--bg:#fff;--text:#111;--muted:#666;--line:#e6e6e6;--safeT:env(safe-area-inset-top,0px);--safeB:env(safe-area-inset-bottom,0px);font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Arial,sans-serif;}
-    body{margin:0;background:var(--bg);color:var(--text);}
-    .top{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid var(--line);padding:12px 12px calc(10px + var(--safeT));}
-    .title{font-weight:900;font-size:14px;}
-    .banner{margin-top:8px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fafafa;font-size:12px;color:#111;line-height:1.35}
-    .ok{color:#0a7a2f;font-weight:700}
-    .bad{color:#b00020;font-weight:800}
-    .page{padding:12px 12px calc(72px + var(--safeB));}
-    .card{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fff;}
-    .muted{color:var(--muted)}
-    .btn{border:1px solid var(--line);background:#fff;border-radius:12px;padding:10px 12px;font-size:13px;cursor:pointer}
-    .btn:hover{background:#f3f3f3}
-    pre{white-space:pre-wrap;word-break:break-word;margin:8px 0 0;font-size:12px;background:#0b0b0b;color:#fff;padding:10px;border-radius:12px;max-height:40vh;overflow:auto}
-  </style>
+    :root{
+      --bg:#fff; --text:#000; --muted:#666;
+      --line:#d9d9d9; --line2:#efefef;
+      --radius:12px;
+      --font:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Arial,sans-serif;
+      --safeB: env(safe-area-inset-bottom, 0px);
+      --safeT: env(safe-area-inset-top, 0px);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:var(--font);background:var(--bg);color:var(--text)}
+    button,input,select,textarea{font-family:inherit}
+    .btn,.input,.select{
+      border:1px solid var(--line);
+      background:#fff;color:#000;
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:13px;
+      outline:none;
+    }
+    .btn{cursor:pointer;user-select:none}
+    .btn:hover{background:var(--line2)}
+    .btn.primary{border-color:#000}
+    .btn.icon{width:44px;height:44px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:14px}
+    .pill{border:1px solid var(--line);border-radius:999px;padding:2px 8px;font-size:10px;display:inline-flex;gap:6px;align-items:center}
+    .dot{width:10px;height:10px;border-radius:999px;border:1px solid rgba(0,0,0,.25);background:var(--c,#000)}
+    .hide{display:none!important}
+
+    /* Top bar */
+    .top{
+      position:sticky;top:0;z-index:30;
+      padding:10px 12px;
+      padding-top: calc(10px + var(--safeT));
+      background:#fff;border-bottom:1px solid var(--line);
+      display:flex;align-items:center;gap:10px;justify-content:space-between;
+      min-height:54px;
+    }
+    .top .left{display:flex;align-items:center;gap:8px;min-width:0;flex:1}
+    .top .title{font-weight:900;font-size:14px;white-space:nowrap}
+    .top .monthSel{max-width:180px}
+    .top .right{display:flex;align-items:center;gap:8px}
+    .searchRow{
+      position:sticky;top:54px;z-index:29;
+      background:#fff;border-bottom:1px solid var(--line2);
+      padding:10px 12px;
+    }
+
+    /* Layout */
+    .page{padding:12px 12px calc(86px + var(--safeB));}
+    .card{border:1px solid var(--line);border-radius:var(--radius);background:#fff;overflow:hidden}
+    .cardHead{
+      padding:12px;border-bottom:1px solid var(--line2);
+      display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+    }
+    .h{margin:0;font-weight:900;font-size:13px}
+    .s{margin:0;color:var(--muted);font-size:11px}
+
+    /* Tabs */
+    .tabbar{
+      position:fixed;left:0;right:0;bottom:0;z-index:40;
+      background:#fff;border-top:1px solid var(--line);
+      padding:6px 8px calc(6px + var(--safeB));
+      display:grid;grid-template-columns:repeat(4,1fr);gap:8px;
+    }
+    .tab{
+      min-height:52px;border:1px solid transparent;border-radius:14px;
+      display:flex;align-items:center;justify-content:center;
+      font-size:12px;background:#fff;cursor:pointer;user-select:none;
+    }
+    .tab:hover{background:var(--line2)}
+    .tab.active{border-color:#000}
+
+    /* Calendar */
+    .dow{display:grid;grid-template-columns:repeat(7,1fr);border-top:1px solid var(--line2);border-bottom:1px solid var(--line2);padding:6px 0;margin-bottom:10px}
+    .dow div{text-align:center;font-size:10px;color:var(--muted);letter-spacing:.3px}
+    .days{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+    .day{
+      border:1px solid var(--line2);border-radius:12px;
+      padding:8px;min-height:84px;background:#fff;cursor:pointer;
+      display:flex;flex-direction:column;gap:6px;overflow:hidden;
+      transition:background .12s ease,border-color .12s ease;
+      touch-action:manipulation;
+    }
+    .day:hover{background:var(--line2)}
+    .day.blank{opacity:.35;cursor:default}
+    .day.blank:hover{background:#fff}
+    .day.today{border-color:#000}
+    .day.selected{border-color:#000;background:var(--line2)}
+    .dtop{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:11px}
+    .dnum{font-weight:900}
+    .badge{font-size:10px;border:1px solid var(--line);border-radius:999px;padding:2px 6px;background:#fff;visibility:hidden}
+    .badge.show{visibility:visible}
+    .previews{display:flex;flex-direction:column;gap:4px;max-height:84px;overflow:hidden;transition:max-height .2s ease}
+    .preview{
+      font-size:10.8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+      border-left:3px solid var(--c,#000);padding-left:6px;
+    }
+    .preview.done{color:var(--muted);text-decoration:line-through;opacity:.85}
+
+    /* Year accordion */
+    .monthRow{border:1px solid var(--line2);border-radius:14px;overflow:hidden}
+    .monthBtn{
+      width:100%;border:none;background:#fff;cursor:pointer;padding:12px;
+      display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+    }
+    .monthBtn:hover{background:var(--line2)}
+    .monthBtn .name{font-weight:900;font-size:13px}
+    .monthBody{padding:12px;border-top:1px solid var(--line2)}
+    .mini .day{min-height:72px}
+    .mini .previews{max-height:72px}
+
+    /* Tasks list */
+    .groupTitle{margin:12px 0 6px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px}
+    .task{
+      border:1px solid var(--line);
+      border-left:6px solid var(--c,#000);
+      border-radius:14px;
+      padding:10px;
+      display:flex;gap:10px;align-items:flex-start;justify-content:space-between;
+      background:#fff;cursor:pointer;
+    }
+    .task:hover{background:var(--line2)}
+    .taskTitle{margin:0 0 4px;font-weight:900;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .taskSub{margin:0;font-size:11px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+    .taskNotes{margin:6px 0 0;font-size:12px;white-space:pre-wrap;word-break:break-word}
+
+    /* Sheet */
+    .overlay{position:fixed;inset:0;background:rgba(0,0,0,.18);z-index:60;display:flex;align-items:flex-end}
+    .sheet{
+      width:100%;
+      max-height:86vh;
+      background:#fff;
+      border-top:1px solid var(--line);
+      border-radius:18px 18px 0 0;
+      padding:12px;
+      overflow:auto;
+      transform:translateY(var(--y,0px));
+      transition:transform .18s ease;
+      touch-action:none;
+    }
+    .sheet.dragging{transition:none}
+    .grab{width:44px;height:5px;border-radius:999px;background:var(--line2);margin:6px auto 10px}
+    .sheetTop{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+    .sheetTitle{margin:0;font-weight:900;font-size:14px}
+    .sheetHint{margin:4px 0 10px;color:var(--muted);font-size:12px}
+    .divider{height:1px;background:var(--line2);margin:12px 0}
+    .row{display:flex;gap:8px;flex-wrap:wrap}
+    .row>*{flex:1;min-width:140px}
+    textarea.input{min-height:84px;resize:vertical}
+
+    .colors{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+    .cchip{
+      border:1px solid var(--line);
+      border-radius:999px;padding:7px 10px;
+      display:inline-flex;align-items:center;gap:8px;
+      cursor:pointer;user-select:none;font-size:12px;background:#fff;
+    }
+    .cchip:hover{background:var(--line2)}
+    .cchip.active{border-color:#000}
+
+    
+    .chip{
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:8px 10px;
+      font-size:12px;
+      background:#fff;
+      cursor:pointer;
+      user-select:none;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      min-height:38px;
+    }
+    .chip:hover{background:var(--line2)}
+    .chip.active{border-color:#000}
+    .filterStack{
+      position:sticky;
+      top: calc(54px + var(--safeT));
+      z-index:28;
+    }
+    .page{padding-top: 8px;}
+    /* month swipe animation */
+    .slideWrap{ overflow:hidden; }
+    .slideInner{ transition: transform 220ms ease; }
+    .slideInner.left{ transform: translateX(-10px); }
+    .slideInner.right{ transform: translateX(10px); }
+
+    /* Desktop enhancement (still single file, but works offline) */
+    @media(min-width: 980px){
+      .tabbar{display:none}
+      .page{padding-bottom:18px}
+    }
+  
+    /* MOBILE: ALWAYS-VISIBLE DONE BUTTON */
+    .sheetCloseFab{
+      position: fixed;
+      right: calc(16px + var(--safeR));
+      top: calc(12px + var(--safeT));
+      z-index: 9999;
+      border:1px solid var(--line2);
+      background:#fff;
+      border-radius:999px;
+      padding:10px 12px;
+      font-size:14px;
+      min-height:44px;
+      display:none;
+    }
+    @media (max-width:768px){ .sheetCloseFab{display:block;} }
+
+
+    .build{font-size:11px;font-weight:600;color:#666;margin-left:6px;}
+
+    /* MOBILE: STICKY SHEET HEADER */
+    .sheetTop{position:sticky; top:0; z-index:6; background:#fff; padding-bottom:8px;}
+    #closeBtn{min-height:44px; padding:10px 14px;}
+
+</style>
 </head>
 <body>
   <div class="top">
-    <div class="title">2026 Planner — Recovery Build</div>
-    <div id="status" class="banner">
-      HTML loaded: <span class="ok">YES</span><br>
-      JS loaded: <span id="jsFlag" class="bad">NO (waiting…)</span><br>
-      Render status: <span id="renderFlag" class="bad">NOT STARTED</span><br>
-      <span class="muted">If you only see a blank page on GitHub Pages, your deployed file isn’t this one (or cache/service worker is hijacking).</span>
+    <div class="left">
+      <div class="title">2026 <span class="build">build 20260113-115506</span></div>
+      <select id="monthSel" class="select monthSel" aria-label="Select month"></select>
+    </div>
+    <div class="right">
+      <button id="todayBtnTop" class="btn icon" aria-label="Today">•</button>
+      <button id="searchBtn" class="btn icon" aria-label="Search">/</button>
+      <button id="newBtn" class="btn icon primary" aria-label="New task">＋</button>
     </div>
   </div>
 
-  <div class="page">
-    <div class="card">
-      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between">
-        <div>
-          <div style="font-weight:900">Debug Panel</div>
-          <div class="muted" style="font-size:12px">This build forces visible output even if the main app crashes.</div>
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn" id="clearBtn" type="button">Clear site cache + SW</button>
-          <button class="btn" id="reloadBtn" type="button">Hard reload</button>
-        </div>
-      </div>
-      <div id="env" class="banner" style="margin-top:12px"></div>
-      <div id="errWrap" class="banner" style="margin-top:12px;display:none">
-        <div><span class="bad">App Error captured</span> (copy/paste this to me)</div>
-        <pre id="errText"></pre>
-      </div>
-    </div>
+  <div id="searchRow" class="searchRow hide">
+    <input id="searchInput" class="input" style="width:100%" type="search" placeholder="Search tasks…">
   </div>
+
+  
+  <div id="filterRow" class="searchRow" style="top: calc(54px + var(--safeT));">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between">
+      <div style="display:flex;gap:8px;flex-wrap:wrap" id="statusChips"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap" id="densityChips"></div>
+    </div>
+    <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap" id="monthModeChips"></div>
+  </div>
+
+  <div class="page" id="page"></div>
+
+  <div class="tabbar" role="tablist" aria-label="Bottom tabs">
+    <div class="tab active" data-tab="month">Month</div>
+    <div class="tab" data-tab="year">Year</div>
+    <div class="tab" data-tab="tasks">Tasks</div>
+    <div class="tab" data-tab="settings">Settings</div>
+  </div>
+
+  <input id="importFile" type="file" accept="application/json" class="hide"/>
 
 <script>
-(function(){
-  const $ = (id)=>document.getElementById(id);
-  const setOk = (el, text)=>{ el.textContent=text; el.className="ok"; };
-  const setBad = (el, text)=>{ el.textContent=text; el.className="bad"; };
+(() => {
+  const YEAR = 2026;
+  const STORAGE_KEY = "year_planner_2026_tasks_v3_bw_focus"; // keeps compatibility with your desktop builds
 
-  // Mark JS running
-  setOk($("jsFlag"), "YES");
+  const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const DOW = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+  const STATUSES = ["todo","doing","done"];
+  const COLOR_PRESETS = [
+    {name:"Orange", v:"#F59E0B"},
+    {name:"Blue", v:"#3B82F6"},
+    {name:"Yellow", v:"#FACC15"},
+    {name:"Red", v:"#EF4444"},
+    {name:"Green", v:"#22C55E"},
+    {name:"Purple", v:"#A855F7"},
+    {name:"Gray", v:"#6B7280"},
+    {name:"Black", v:"#111827"},
+  ];
+  const DEFAULT_COLOR = COLOR_PRESETS[0].v;
 
-  // Environment info
-  const env = $("env");
-  env.innerHTML =
-    "URL: <span class='muted'>" + location.href + "</span><br>" +
-    "Protocol: <span class='muted'>" + location.protocol + "</span><br>" +
-    "UserAgent: <span class='muted'>" + navigator.userAgent + "</span><br>" +
-    "SW supported: <span class='muted'>" + ("serviceWorker" in navigator) + "</span>";
+  const $ = (id) => document.getElementById(id);
 
-  // Error capture (shows on-screen)
-  function showErr(title, detail){
-    setBad($("renderFlag"), "FAILED");
-    const wrap = $("errWrap");
-    wrap.style.display="block";
-    $("errText").textContent = title + "\n\n" + (detail || "");
+  const pad2 = (n) => String(n).padStart(2,"0");
+  const dateKey = (y,m1,d) => `${y}-${pad2(m1)}-${pad2(d)}`;
+  const parseKey = (key) => { const [y,m,d]=key.split("-").map(Number); return new Date(y,m-1,d); };
+  const mondayIndex = (dt) => { const gd=dt.getDay(); return gd===0?6:gd-1; };
+  const uid = () => `t_${Math.random().toString(16).slice(2)}_${Date.now().toString(16)}`;
+  const normalize = (s) => (s||"").toString().toLowerCase().trim();
+  const normalizeHex = (hex) => {
+    const h=(hex||"").trim();
+    if(!h) return "";
+    const v=h.startsWith("#")?h:("#"+h);
+    return /^#[0-9a-fA-F]{6}$/.test(v) ? v.toUpperCase() : "";
+  };
+  const isValidKeyForYear = (key, year) => {
+    if(!new RegExp(`^${year}-\\d{2}-\\d{2}$`).test(key)) return false;
+    const dt=parseKey(key);
+    return dt.getFullYear()===year && dateKey(dt.getFullYear(), dt.getMonth()+1, dt.getDate())===key;
+  };
+  const fmtLongDate = (d) => {
+    const dayNames=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+    return `${dayNames[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+  };
+
+  function migrateLoaded(raw){
+    const incoming = (raw && raw.tasksByDate && typeof raw.tasksByDate === "object") ? raw.tasksByDate : raw;
+    const out = {};
+    if(!incoming || typeof incoming !== "object") return out;
+    for(const k of Object.keys(incoming)){
+      if(!isValidKeyForYear(k, YEAR)) continue;
+      const arr = Array.isArray(incoming[k]) ? incoming[k] : [];
+      const clean = arr
+        .filter(t => t && typeof t === "object")
+        .map(t => ({
+          id: (t.id || uid()).toString(),
+          title: (t.title || "").toString(),
+          notes: (t.notes || "").toString(),
+          time: (t.time || "").toString(),
+          status: STATUSES.includes(t.status) ? t.status : "todo",
+          color: normalizeHex(t.color) || DEFAULT_COLOR,
+          createdAt: Number.isFinite(t.createdAt) ? t.createdAt : Date.now(),
+          updatedAt: Number.isFinite(t.updatedAt) ? t.updatedAt : Date.now(),
+        }))
+        .filter(t => t.title.trim().length > 0);
+      if(clean.length) out[k] = clean;
+    }
+    return out;
   }
-  window.addEventListener("error", (e)=>{
-    showErr("window.onerror: " + (e.message||"Unknown"), (e.error && e.error.stack) ? e.error.stack : (e.filename||"") + ":" + (e.lineno||"") + ":" + (e.colno||""));
-  });
-  window.addEventListener("unhandledrejection", (e)=>{
-    const reason = e.reason;
-    showErr("Unhandled promise rejection", reason && reason.stack ? reason.stack : String(reason));
-  });
 
-  // Clear cache + service worker
-  async function clearAll(){
+  function safeLoad(){
     try{
-      // unregister SW
-      if("serviceWorker" in navigator){
-        const regs = await navigator.serviceWorker.getRegistrations();
-        for(const r of regs) await r.unregister();
-      }
-      // clear caches
-      if(window.caches && caches.keys){
-        const keys = await caches.keys();
-        for(const k of keys) await caches.delete(k);
-      }
-      // clear local storage (optional, safe for debug)
-      try{ localStorage.clear(); }catch(_){}
-      alert("Cleared Service Worker + Cache + localStorage. Now reload in a Private tab if on iOS.");
-    }catch(err){
-      showErr("Clear failed", err && err.stack ? err.stack : String(err));
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return {};
+      return migrateLoaded(JSON.parse(raw));
+    }catch{
+      return {};
     }
   }
-  $("clearBtn").addEventListener("click", clearAll);
-  $("reloadBtn").addEventListener("click", ()=>location.reload(true));
+  function safeSave(obj){ localStorage.setItem(STORAGE_KEY, JSON.stringify(obj)); }
 
-  // Minimal render tick (proves JS can update DOM)
-  try{
-    setOk($("renderFlag"), "RUNNING");
-    // A tiny visible render so it never appears empty:
-    const p = document.createElement("div");
-    p.className="banner";
-    p.style.marginTop="12px";
-    p.innerHTML = "<span class='ok'>Render OK:</span> This page proves GitHub Pages is serving the latest HTML and JS is executing.";
-    document.querySelector(".page").appendChild(p);
-  }catch(err){
-    showErr("Render init failed", err && err.stack ? err.stack : String(err));
+  function sortTasks(arr){
+    return arr.slice().sort((a,b)=>{
+      const ta=a.time||"99:99", tb=b.time||"99:99";
+      if(ta<tb) return -1;
+      if(ta>tb) return 1;
+      return (a.createdAt||0)-(b.createdAt||0);
+    });
+  }
+  function taskMatches(task, query, filter){
+    if(filter!=="all" && task.status!==filter) return false;
+    const q=normalize(query);
+    if(!q) return true;
+    const hay = normalize([task.title, task.notes, task.time, task.status].filter(Boolean).join(" "));
+    return hay.includes(q);
   }
 
-  // IMPORTANT: do NOT register any service worker in recovery build.
+  function buildMonthMatrix(year, monthIndex0){
+    const first=new Date(year,monthIndex0,1);
+    const daysInMonth=new Date(year,monthIndex0+1,0).getDate();
+    const start=mondayIndex(first);
+    const cells=[];
+    for(let i=0;i<start;i++) cells.push(null);
+    for(let d=1;d<=daysInMonth;d++){
+      cells.push({day:d, key:dateKey(year, monthIndex0+1, d)});
+    }
+    while(cells.length%7!==0) cells.push(null);
+    const weeks=[];
+    for(let i=0;i<cells.length;i+=7) weeks.push(cells.slice(i,i+7));
+    return weeks;
+  }
+
+  // State
+  const state = {
+    currentView: "month", // month|year|tasks|settings
+    density: "comfortable", // compact|comfortable
+    filter: "all", // all|todo|doing|done
+    query: "",
+    monthIndex: (() => {
+      const now=new Date();
+      return (now.getFullYear()===YEAR) ? (now.getMonth()+1) : 1;
+    })(),
+    selectedKey: null,
+    drawerOpen: false,
+    editingId: null,
+    form: { title:"", notes:"", time:"", status:"todo", color: DEFAULT_COLOR },
+    tasksByDate: safeLoad(),
+    yearOpen: {},
+    searchOpen: false,
+    monthMode: "calendar", // "calendar" | "detail"
+    monthSwipeDir: 0, // -1 left, 1 right
+    monthSwipeKey: 0,
+  };
+
+  const todayKey = (() => {
+    const now=new Date();
+    if(now.getFullYear()!==YEAR) return null;
+    return dateKey(YEAR, now.getMonth()+1, now.getDate());
+  })();
+
+  // UI refs
+  const page = $("page");
+  const monthSel = $("monthSel");
+  const todayBtnTop = $("todayBtnTop");
+  const searchBtn = $("searchBtn");
+  const searchRow = $("searchRow");
+  const searchInput = $("searchInput");
+  const filterRow = $("filterRow");
+  const statusChips = $("statusChips");
+  const densityChips = $("densityChips");
+  const monthModeChips = $("monthModeChips");
+  const newBtn = $("newBtn");
+  const importFile = $("importFile");
+
+  // Tabs
+  document.querySelectorAll(".tab").forEach(tab=>{
+    tab.addEventListener("click", ()=>{
+      document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+      tab.classList.add("active");
+      state.currentView = tab.dataset.tab;
+      render();
+    });
+  });
+
+  // Top controls
+  searchBtn.addEventListener("click", ()=>{
+    state.searchOpen = !state.searchOpen;
+    searchRow.classList.toggle("hide", !state.searchOpen);
+    if(state.searchOpen) setTimeout(()=> searchInput.focus(), 0);
+  });
+  searchInput.addEventListener("input", (e)=>{
+    state.query = e.target.value;
+    render();
+  });
+  todayBtnTop.addEventListener("click", ()=>{
+    const key = todayKey || dateKey(YEAR,1,1);
+    state.monthIndex = parseKey(key).getMonth()+1;
+    monthSel.value = String(state.monthIndex);
+    openDrawerForDate(key);
+  });
+
+  newBtn.addEventListener("click", ()=>{
+    const key = state.selectedKey || todayKey || dateKey(YEAR,1,1);
+    openDrawerForDate(key);
+    startNewTask();
+  });
+
+  // Month selector
+  MONTHS.forEach((m,i)=>{
+    const opt=document.createElement("option");
+    opt.value=String(i+1);
+    opt.textContent=m;
+    monthSel.appendChild(opt);
+  });
+  monthSel.value=String(state.monthIndex);
+  monthSel.addEventListener("change", (e)=>{
+    state.monthIndex = Number(e.target.value);
+    render();
+  });
+
+  // Keyboard shortcuts (desktop)
+  window.addEventListener("keydown", (e)=>{
+    if(e.key==="/" && !e.metaKey && !e.ctrlKey){
+      e.preventDefault();
+      state.searchOpen = true;
+      searchRow.classList.remove("hide");
+      searchInput.focus();
+      return;
+    }
+    if(e.key==="Escape" && state.drawerOpen){
+      closeDrawer();
+      return;
+    }
+    if((e.key==="n"||e.key==="N") && state.drawerOpen){
+      startNewTask();
+      return;
+    }
+  });
+
+  // Swipe month (Month view)
+  const swipe = {active:false,x0:0,y0:0,lastX:0,lastY:0};
+  function attachMonthSwipe(container){
+    container.addEventListener("touchstart", (e)=>{
+      const p=e.touches[0];
+      swipe.active=true; swipe.x0=p.clientX; swipe.y0=p.clientY; swipe.lastX=p.clientX; swipe.lastY=p.clientY;
+    }, {passive:true});
+    container.addEventListener("touchmove", (e)=>{
+      if(!swipe.active) return;
+      const p=e.touches[0];
+      swipe.lastX=p.clientX; swipe.lastY=p.clientY;
+    }, {passive:true});
+    container.addEventListener("touchend", ()=>{
+      if(!swipe.active) return;
+      const dx=swipe.lastX-swipe.x0;
+      const dy=swipe.lastY-swipe.y0;
+      swipe.active=false;
+      if(Math.abs(dx)>60 && Math.abs(dx)>Math.abs(dy)*1.2){
+        changeMonth(dx<0 ? 1 : -1);
+      }
+    });
+  }
+  function changeMonth(delta){
+    state.monthSwipeDir = delta>0 ? -1 : 1; // next month slides left
+    state.monthSwipeKey = (state.monthSwipeKey||0) + 1;
+    let next = state.monthIndex + delta;
+    if(next<1) next=12;
+    if(next>12) next=1;
+    state.monthIndex = next;
+    monthSel.value=String(next);
+    render();
+    // reset nudge after paint
+    setTimeout(()=>{ state.monthSwipeDir = 0; }, 240);
+  }
+
+  // Long press (day)
+  const longPress = {timer:null,fired:false};
+  function startLongPress(key){
+    clearTimeout(longPress.timer);
+    longPress.fired=false;
+    longPress.timer=setTimeout(()=>{
+      longPress.fired=true;
+      openDrawerForDate(key);
+      startNewTask();
+    }, 420);
+  }
+  function cancelLongPress(){
+    clearTimeout(longPress.timer);
+    longPress.timer=null;
+  }
+
+  // Storage
+  function commit(){ safeSave(state.tasksByDate); }
+
+  function tasksForDay(key){
+    return sortTasks(state.tasksByDate[key] || []);
+  }
+  function visibleTasksForDay(key){
+    return tasksForDay(key).filter(t=>taskMatches(t, state.query, state.filter));
+  }
+  function badgeCount(key){ return visibleTasksForDay(key).length; }
+  function previews(key, max){
+    return visibleTasksForDay(key).slice(0, max);
+  }
+  function monthTaskCount(mi){
+    const prefix = `${YEAR}-${pad2(mi)}-`;
+    let c=0;
+    for(const k of Object.keys(state.tasksByDate)){
+      if(!k.startsWith(prefix)) continue;
+      c += (state.tasksByDate[k]||[]).filter(t=>taskMatches(t, state.query, state.filter)).length;
+    }
+    return c;
+  }
+
+  // Drawer
+  let overlayEl=null;
+  function openDrawerForDate(key){
+    state.selectedKey = key;
+    state.drawerOpen = true;
+    state.editingId = null;
+    state.form = { title:"", notes:"", time:"", status:"todo", color: DEFAULT_COLOR };
+    render();
+    showDrawer();
+  }
+  function closeDrawer(){
+    state.drawerOpen = false;
+    state.editingId = null;
+    render();
+    if(overlayEl){ overlayEl.remove(); overlayEl=null; }
+  }
+  function startNewTask(){
+    state.editingId = null;
+    state.form = { ...state.form, title:"", notes:"", time:"", status:"todo" };
+    renderDrawer();
+    const t=$("tTitle"); if(t) t.focus();
+  }
+  function startEdit(task){
+    state.editingId = task.id;
+    state.form = {
+      title: task.title||"",
+      notes: task.notes||"",
+      time: task.time||"",
+      status: task.status||"todo",
+      color: normalizeHex(task.color)||DEFAULT_COLOR,
+    };
+    renderDrawer();
+    const t=$("tTitle"); if(t) t.focus();
+  }
+  function cancelEdit(){
+    state.editingId=null;
+    state.form={...state.form,title:"",notes:"",time:"",status:"todo"};
+    renderDrawer();
+  }
+  function upsert(){
+    const key=state.selectedKey;
+    if(!key) return;
+    const title=(state.form.title||"").trim();
+    if(!title){ alert("Title is required."); return; }
+    const now=Date.now();
+    const color = normalizeHex(state.form.color) || DEFAULT_COLOR;
+    const arr = Array.isArray(state.tasksByDate[key]) ? state.tasksByDate[key].slice() : [];
+
+    if(state.editingId){
+      const idx = arr.findIndex(t=>t.id===state.editingId);
+      if(idx>=0){
+        arr[idx] = {
+          ...arr[idx],
+          title,
+          notes:(state.form.notes||"").trim(),
+          time: state.form.time || "",
+          status: STATUSES.includes(state.form.status) ? state.form.status : "todo",
+          color,
+          updatedAt: now,
+        };
+      }
+    }else{
+      arr.push({
+        id: uid(),
+        title,
+        notes:(state.form.notes||"").trim(),
+        time: state.form.time || "",
+        status: STATUSES.includes(state.form.status) ? state.form.status : "todo",
+        color,
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+    if(arr.length) state.tasksByDate[key]=arr;
+    else delete state.tasksByDate[key];
+    commit();
+    cancelEdit();
+    render(); // update previews/counts
+  }
+  function del(taskId){
+    const key=state.selectedKey;
+    const arr=state.tasksByDate[key]||[];
+    const t=arr.find(x=>x.id===taskId);
+    if(!t) return;
+    if(!confirm(`Delete "${t.title}"?`)) return;
+    const next = arr.filter(x=>x.id!==taskId);
+    if(next.length) state.tasksByDate[key]=next;
+    else delete state.tasksByDate[key];
+    commit();
+    if(state.editingId===taskId) cancelEdit();
+    render();
+    renderDrawer();
+  }
+
+  // Import/Export/Clear
+  function exportJSON(){
+    const payload={ year:YEAR, exportedAt:new Date().toISOString(), tasksByDate: state.tasksByDate };
+    const blob=new Blob([JSON.stringify(payload,null,2)], {type:"application/json"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    a.href=url; a.download="2026_year_planner_export.json";
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  }
+  function importJSON(){
+    importFile.click();
+  }
+  importFile.addEventListener("change", async (e)=>{
+    const file = e.target.files && e.target.files[0];
+    e.target.value="";
+    if(!file) return;
+    try{
+      const txt=await file.text();
+      const json=JSON.parse(txt);
+      const incoming=migrateLoaded(json);
+      if(!Object.keys(incoming).length){
+        alert("No valid 2026 tasks found in this JSON.");
+        return;
+      }
+      if(!confirm("Import will merge into your current planner. Continue?")) return;
+      state.tasksByDate = { ...state.tasksByDate, ...incoming };
+      commit();
+      render();
+      alert("Import complete.");
+    }catch{
+      alert("Failed to import JSON.");
+    }
+  });
+  function clearAll(){
+    if(!confirm("Clear ALL tasks for 2026? This cannot be undone.")) return;
+    state.tasksByDate = {};
+    commit();
+    closeDrawer();
+    render();
+  }
+
+
+  // iOS keyboard + viewport handling (prevents stuck scroll / hidden buttons)
+  function updateViewportVars(){
+    try{
+      const vv = window.visualViewport;
+      const vvh = vv ? vv.height : window.innerHeight;
+      const full = window.innerHeight;
+      const kbd = vv ? Math.max(0, full - vv.height - (vv.offsetTop||0)) : 0;
+      document.documentElement.style.setProperty("--vvh", vvh + "px");
+      document.documentElement.style.setProperty("--kbd", kbd + "px");
+    }catch{}
+  }
+  window.addEventListener("resize", updateViewportVars);
+  if(window.visualViewport){
+    window.visualViewport.addEventListener("resize", updateViewportVars);
+    window.visualViewport.addEventListener("scroll", updateViewportVars);
+  }
+  updateViewportVars();
+
+  function attachFocusScroll(sheet){
+    const body = sheet.querySelector("#sheetBody");
+    if(!body) return;
+    const fields = sheet.querySelectorAll("input, textarea, select");
+    fields.forEach(el=>{
+      el.addEventListener("focus", ()=>{
+        updateViewportVars();
+        setTimeout(()=>{
+          try{ el.scrollIntoView({behavior:"smooth", block:"center"}); }catch{}
+        }, 50);
+      });
+    });
+    body.addEventListener("pointerdown", (e)=>{
+      const t = e.target;
+      if(!t) return;
+      if(t.tagName==="INPUT" || t.tagName==="TEXTAREA" || t.tagName==="SELECT" || t.closest("button")) return;
+      const a = sheet.querySelector(":focus");
+      if(a && a.blur) a.blur();
+    });
+  }
+
+  // Sheet swipe-down to close (drag header)
+  const sheetDrag = {dragging:false, y0:0, dy:0};
+  function attachSheetGestures(sheet){
+    const grab = sheet.querySelector("[data-grab='1']");
+    const body = sheet.querySelector("#sheetBody");
+
+    let startY=0, curY=0, dragging=false, startTime=0;
+
+    function canDragFrom(e){
+      return !!(e.target && (e.target === grab || (e.target.closest && e.target.closest("[data-grab='1']"))));
+    }
+    function atTop(){
+      return !body || body.scrollTop <= 0;
+    }
+
+    function onDown(e){
+      if(!canDragFrom(e)) return;
+      if(!atTop()) return;
+      dragging=true;
+      startY = (e.touches ? e.touches[0].clientY : e.clientY);
+      curY = 0;
+      startTime = Date.now();
+      sheet.classList.add("dragging");
+      sheet.setPointerCapture && sheet.setPointerCapture(e.pointerId);
+    }
+
+    function onMove(e){
+      if(!dragging) return;
+      const y = (e.touches ? e.touches[0].clientY : e.clientY);
+      curY = Math.max(0, y - startY);
+      const eased = curY * 0.92;
+      sheet.style.transform = `translateY(${eased}px)`;
+      if(e.preventDefault) e.preventDefault();
+    }
+
+    function onUp(){
+      if(!dragging) return;
+      dragging=false;
+      sheet.classList.remove("dragging");
+      const dt = Date.now() - startTime;
+      const velocity = curY / Math.max(1, dt); // px/ms
+      const shouldClose = curY > 120 || velocity > 0.9;
+      if(shouldClose){
+        closeDrawer();
+        render();
+      }else{
+        sheet.style.transform = "";
+      }
+    }
+
+    if(grab){
+      grab.addEventListener("pointerdown", onDown, {passive:false});
+      grab.addEventListener("pointermove", onMove, {passive:false});
+      grab.addEventListener("pointerup", onUp, {passive:true});
+      grab.addEventListener("pointercancel", onUp, {passive:true});
+      grab.addEventListener("touchstart", onDown, {passive:false});
+      grab.addEventListener("touchmove", onMove, {passive:false});
+      grab.addEventListener("touchend", onUp, {passive:true});
+      grab.addEventListener("touchcancel", onUp, {passive:true});
+    }
+  }
+
+  function showDrawer(){
+    if(overlayEl) overlayEl.remove();
+    overlayEl = document.createElement("div");
+    overlayEl.className="overlay";
+    overlayEl.addEventListener("mousedown", (e)=>{ if(e.target===overlayEl) closeDrawer(); });
+    overlayEl.addEventListener("click", (e)=>{ if(e.target===overlayEl) { closeDrawer(); render(); } });
+    overlayEl.innerHTML = `
+      <button class="sheetCloseFab" type="button" id="sheetDoneFab">Done</button>
+      <div class="sheet" role="dialog" aria-label="Day sheet">
+        <div class="grab" data-grab="1"></div>
+        <div id="drawerInner"></div>
+      </div>
+    `;
+    document.body.appendChild(overlayEl);
+    const doneFab = overlayEl.querySelector('#sheetDoneFab');
+    if(doneFab) doneFab.addEventListener('click', ()=>{ closeDrawer(); render(); });
+    const sheet = overlayEl.querySelector(".sheet");
+    attachSheetGestures(sheet);
+    attachFocusScroll(sheet);
+    updateViewportVars();
+    renderDrawer();
+  }
+
+  function renderDrawer(){
+    if(!overlayEl) return;
+    const inner = overlayEl.querySelector("#drawerInner");
+    const key = state.selectedKey;
+    const dt = key ? parseKey(key) : null;
+    const tasks = key ? visibleTasksForDay(key) : [];
+    const title = dt ? fmtLongDate(dt) : (key||"");
+    const isEdit = !!state.editingId;
+
+    inner.innerHTML = `
+      <div class="sheetHeader" data-sheet-header="1">
+        <div class="sheetTop">
+          <div>
+            <p class="sheetTitle">${escapeHtml(title)}</p>
+            <p class="sheetHint">Long-press a day to quick-add • Swipe down on the handle to close</p>
+          </div>
+          <button class="btn" id="closeBtn">Close</button>
+        </div>
+
+        <div class="row" style="margin:10px 0 6px">
+          <button class="btn primary" id="newTaskBtn">New task</button>
+        </div>
+
+        <div class="divider"></div>
+      </div>
+
+      <div class="sheetBody" id="sheetBody">
+        <div class="h" style="margin:0 0 8px">${isEdit ? "Edit task" : "Add task"}</div>
+
+        <div>
+          <div style="font-size:11px;color:var(--muted);margin:2px 0 4px">Title *</div>
+          <input id="tTitle" class="input" style="width:100%" value="${escapeAttr(state.form.title)}" placeholder="e.g., Submit report">
+        </div>
+
+        <div class="row" style="margin-top:8px">
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin:2px 0 4px">Time (optional)</div>
+            <input id="tTime" class="input" type="time" value="${escapeAttr(state.form.time||"")}" style="width:100%">
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin:2px 0 4px">Status</div>
+            <select id="tStatus" class="select" style="width:100%">
+              <option value="todo">To-do</option>
+              <option value="doing">Doing</option>
+              <option value="done">Done</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-top:8px">
+          <div style="font-size:11px;color:var(--muted);margin:2px 0 4px">Color</div>
+          <div class="colors" id="colorChips"></div>
+          <div class="row" style="align-items:center">
+            <div class="pill"><span class="dot" style="--c:${escapeAttr(normalizeHex(state.form.color)||DEFAULT_COLOR)}"></span> ${escapeHtml(normalizeHex(state.form.color)||"—")}</div>
+            <input id="tColor" class="input" placeholder="#RRGGBB" value="${escapeAttr(state.form.color||"")}" style="width:160px">
+          </div>
+          <div style="font-size:12px;color:var(--muted);margin-top:6px">Invalid hex defaults to Orange when saving.</div>
+        </div>
+
+        <div style="margin-top:8px">
+          <div style="font-size:11px;color:var(--muted);margin:2px 0 4px">Notes</div>
+          <textarea id="tNotes" class="input" style="width:100%">${escapeHtml(state.form.notes||"")}</textarea>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="h" style="margin:0 0 8px">Tasks for this date</div>
+        <div id="taskList"></div>
+      </div>
+
+      <div class="sheetFooter">
+        <div class="row">
+          <button class="btn" id="doneBtn">Done</button>
+          <button class="btn primary" id="saveBtn">${isEdit ? "Save" : "Add"}</button>
+          <button class="btn" id="cancelBtn">${isEdit ? "Cancel edit" : "Clear"}</button>
+        </div>
+      </div>
+`;
+
+    // bind
+    $("closeBtn").onclick = closeDrawer;
+    const doneBtnEl = $("doneBtn");
+    if(doneBtnEl) doneBtnEl.onclick = ()=>{ closeDrawer(); render(); };
+    $("newTaskBtn").onclick = startNewTask;
+
+    const tTitle = $("tTitle");
+    const tNotes = $("tNotes");
+    const tTime = $("tTime");
+    const tStatus = $("tStatus");
+    const tColor = $("tColor");
+
+    tStatus.value = state.form.status || "todo";
+
+    tTitle.oninput = (e)=>{ state.form.title = e.target.value; };
+    tNotes.oninput = (e)=>{ state.form.notes = e.target.value; };
+    tTime.oninput = (e)=>{ state.form.time = e.target.value; };
+    tStatus.onchange = (e)=>{ state.form.status = e.target.value; };
+    tColor.oninput = (e)=>{ state.form.color = e.target.value; };
+
+    $("saveBtn").onclick = upsert;
+    $("cancelBtn").onclick = cancelEdit;
+
+    // chips
+    const chips = $("colorChips");
+    chips.innerHTML = "";
+    const current = normalizeHex(state.form.color);
+    COLOR_PRESETS.forEach(c=>{
+      const b=document.createElement("div");
+      b.className="cchip" + ((current && current===c.v.toUpperCase()) ? " active" : "");
+      b.innerHTML = `<span class="dot" style="--c:${c.v}"></span> ${escapeHtml(c.name)}`;
+      b.onclick = ()=>{ state.form.color = c.v; renderDrawer(); };
+      chips.appendChild(b);
+    });
+
+    // tasks list
+    const list = $("taskList");
+    if(!tasks.length){
+      list.innerHTML = `<div class="pill" style="border-style:dashed;color:var(--muted)">No tasks match current search/filter.</div>`;
+      return;
+    }
+    list.innerHTML = "";
+    tasks.forEach(t=>{
+      const row = document.createElement("div");
+      row.className="task";
+      row.style.setProperty("--c", t.color || DEFAULT_COLOR);
+      row.innerHTML = `
+        <div style="min-width:0;flex:1">
+          <p class="taskTitle">${escapeHtml(t.title)}</p>
+          <p class="taskSub">
+            <span class="pill">${t.status==="todo"?"To-do":t.status==="doing"?"Doing":"Done"}</span>
+            ${t.time ? `<span class="pill">${escapeHtml(t.time)}</span>` : ""}
+            <span class="pill"><span class="dot" style="--c:${escapeAttr(t.color||DEFAULT_COLOR)}"></span>Color</span>
+          </p>
+          ${t.notes ? `<p class="taskNotes">${escapeHtml(t.notes)}</p>` : ""}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;align-items:stretch">
+          <button class="btn" data-act="edit">Edit</button>
+          <button class="btn" data-act="del">Delete</button>
+        </div>
+      `;
+      row.querySelector("[data-act='edit']").onclick = (e)=>{ e.stopPropagation(); startEdit(t); };
+      row.querySelector("[data-act='del']").onclick = (e)=>{ e.stopPropagation(); del(t.id); };
+      list.appendChild(row);
+    });
+
+    // focus
+    setTimeout(()=> tTitle.focus(), 0);
+  }
+
+
+  function renderChips(){
+    // Status chips
+    const filters = [
+      {k:"all", label:"All"},
+      {k:"todo", label:"To-do"},
+      {k:"doing", label:"Doing"},
+      {k:"done", label:"Done"},
+    ];
+    statusChips.innerHTML = "";
+    filters.forEach(f=>{
+      const b=document.createElement("div");
+      b.className = "chip" + (state.filter===f.k ? " active" : "");
+      b.textContent = f.label;
+      b.onclick = ()=>{ state.filter=f.k; render(); };
+      statusChips.appendChild(b);
+    });
+
+    // Density chips
+    densityChips.innerHTML = "";
+    [{k:"compact",label:"Compact"},{k:"comfortable",label:"Comfortable"}].forEach(d=>{
+      const b=document.createElement("div");
+      b.className="chip" + (state.density===d.k ? " active" : "");
+      b.textContent=d.label;
+      b.onclick=()=>{ state.density=d.k; render(); };
+      densityChips.appendChild(b);
+    });
+
+    // Month mode chips (only meaningful on Month tab)
+    monthModeChips.innerHTML="";
+    const mm = [
+      {k:"calendar", label:"Calendar"},
+      {k:"detail", label:"Month Detail"},
+    ];
+    mm.forEach(m=>{
+      const b=document.createElement("div");
+      b.className="chip" + (state.monthMode===m.k ? " active" : "");
+      b.textContent=m.label;
+      b.onclick=()=>{ state.monthMode=m.k; render(); };
+      monthModeChips.appendChild(b);
+    });
+  }
+
+  // Render views
+  function render(){
+    // keep storage migrated
+    safeSave(state.tasksByDate);
+
+    renderChips();
+
+    // keep month selector
+    monthSel.value = String(state.monthIndex);
+
+    // update search input value if open
+    searchInput.value = state.query;
+
+    // show/hide month mode selector
+    monthModeChips.style.display = (state.currentView === "month") ? "flex" : "none";
+
+    // render view
+    if(state.currentView === "month") renderMonth();
+    else if(state.currentView === "year") renderYear();
+    else if(state.currentView === "tasks") renderTasks();
+    else renderSettings();
+
+    // if drawer open, ensure it exists
+    if(state.drawerOpen && !overlayEl) showDrawer();
+    if(!state.drawerOpen && overlayEl){ overlayEl.remove(); overlayEl=null; }
+  }
+
+  
+  function renderMonth(){
+    const mIdx = state.monthIndex;
+    const weeks = buildMonthMatrix(YEAR, mIdx-1);
+    const maxPv = (state.density==="comfortable") ? 4 : 3;
+
+    page.innerHTML = `
+      <div class="card">
+        <div class="cardHead">
+          <p class="h">${MONTHS[mIdx-1]}</p>
+          <p class="s">Swipe ← / → to change • Tap day to open</p>
+        </div>
+        <div style="padding:12px" id="monthSwipe" class="slideWrap">
+          <div class="dow">${DOW.map(d=>`<div>${d}</div>`).join("")}</div>
+          <div class="slideInner ${state.monthSwipeDir<0?"left":state.monthSwipeDir>0?"right":""}" id="monthSlide">
+            <div class="days" id="monthDays"></div>
+          </div>
+        </div>
+      </div>
+
+      ${state.monthMode==="detail" ? `
+      <div style="height:12px"></div>
+      <div class="card">
+        <div class="cardHead">
+          <p class="h">Month Tasks</p>
+          <p class="s">Grouped by date • Tap to open day</p>
+        </div>
+        <div style="padding:12px" id="monthTaskList"></div>
+      </div>
+      ` : ``}
+    `;
+
+    const cont = $("monthSwipe");
+    attachMonthSwipe(cont);
+
+    const daysEl = $("monthDays");
+    weeks.flat().forEach(cell=>{
+      if(!cell){
+        const d=document.createElement("div");
+        d.className="day blank";
+        daysEl.appendChild(d);
+        return;
+      }
+      const key = cell.key;
+      const count = badgeCount(key);
+      const pv = previews(key, maxPv);
+      const d=document.createElement("div");
+      d.className="day" + (todayKey && key===todayKey ? " today" : "") + (state.selectedKey===key ? " selected" : "");
+      d.innerHTML = `
+        <div class="dtop">
+          <div class="dnum">${cell.day}</div>
+          <div class="badge ${count? "show":""}">${count}</div>
+        </div>
+        <div class="previews">
+          ${pv.map(t=>`<div class="preview ${t.status==="done"?"done":""}" style="--c:${escapeAttr(t.color||DEFAULT_COLOR)}">${escapeHtml(t.title)}</div>`).join("")}
+        </div>
+      `;
+      d.addEventListener("click", ()=> openDrawerForDate(key));
+      d.addEventListener("pointerdown", ()=> startLongPress(key));
+      d.addEventListener("pointerup", ()=> { cancelLongPress(); });
+      d.addEventListener("pointercancel", cancelLongPress);
+      daysEl.appendChild(d);
+    });
+
+    if(state.monthMode==="detail"){
+      const list = $("monthTaskList");
+      const prefix = `${YEAR}-${pad2(mIdx)}-`;
+      const rows=[];
+      for(const k of Object.keys(state.tasksByDate)){
+        if(!k.startsWith(prefix)) continue;
+        for(const t of (state.tasksByDate[k]||[])){
+          if(taskMatches(t, state.query, state.filter)) rows.push({dateKey:k, task:t});
+        }
+      }
+      rows.sort((a,b)=>{
+        if(a.dateKey<b.dateKey) return -1;
+        if(a.dateKey>b.dateKey) return 1;
+        const ta=a.task.time||"99:99", tb=b.task.time||"99:99";
+        if(ta<tb) return -1;
+        if(ta>tb) return 1;
+        return (a.task.createdAt||0)-(b.task.createdAt||0);
+      });
+      if(!rows.length){
+        list.innerHTML = `<div class="pill" style="border-style:dashed;color:var(--muted)">No tasks in this month match current search/filter.</div>`;
+        return;
+      }
+      const grouped = rows.reduce((acc,r)=>{ (acc[r.dateKey] ||= []).push(r.task); return acc; }, {});
+      Object.keys(grouped).sort().forEach(dateK=>{
+        const gt=document.createElement("div");
+        gt.className="groupTitle";
+        gt.textContent=dateK;
+        list.appendChild(gt);
+        grouped[dateK].forEach(t=>{
+          const el=document.createElement("div");
+          el.className="task";
+          el.style.setProperty("--c", t.color||DEFAULT_COLOR);
+          el.innerHTML = `
+            <div style="min-width:0;flex:1">
+              <p class="taskTitle">${escapeHtml(t.title)}</p>
+              <p class="taskSub">
+                <span class="pill">${t.status==="todo"?"To-do":t.status==="doing"?"Doing":"Done"}</span>
+                ${t.time ? `<span class="pill">${escapeHtml(t.time)}</span>` : ""}
+              </p>
+              ${t.notes ? `<p class="taskNotes">${escapeHtml(t.notes)}</p>` : ""}
+            </div>
+            <div class="pill"><span class="dot" style="--c:${escapeAttr(t.color||DEFAULT_COLOR)}"></span></div>
+          `;
+          el.onclick = ()=> openDrawerForDate(dateK);
+          list.appendChild(el);
+        });
+      });
+    }
+  }
+
+  function renderYear(){
+    page.innerHTML = `
+      <div class="card">
+        <div class="cardHead">
+          <p class="h">Year</p>
+          <p class="s">Tap month to expand</p>
+        </div>
+        <div style="padding:12px;display:flex;flex-direction:column;gap:10px" id="yearList"></div>
+      </div>
+    `;
+    const list = $("yearList");
+    MONTHS.forEach((name, i)=>{
+      const mi=i+1;
+      const open = !!state.yearOpen[mi];
+      const row=document.createElement("div");
+      row.className="monthRow";
+      row.innerHTML = `
+        <button class="monthBtn">
+          <div class="name">${name}</div>
+          <div class="s">${monthTaskCount(mi)} tasks</div>
+        </button>
+        <div class="monthBody ${open?"":"hide"}"></div>
+      `;
+      const btn = row.querySelector(".monthBtn");
+      const body = row.querySelector(".monthBody");
+      btn.onclick = ()=>{
+        state.yearOpen[mi] = !state.yearOpen[mi];
+        renderYear(); // quick
+      };
+      if(open){
+        const weeks = buildMonthMatrix(YEAR, mi-1);
+        const maxPv = (state.density==="comfortable") ? 4 : 3;
+        body.innerHTML = `
+          <div class="mini">
+            <div class="dow">${DOW.map(d=>`<div>${d}</div>`).join("")}</div>
+            <div class="days"></div>
+            <div style="margin-top:10px">
+              <button class="btn" style="width:100%" data-openmonth="1">Open Month</button>
+            </div>
+          </div>
+        `;
+        const daysEl = body.querySelector(".days");
+        weeks.flat().forEach(cell=>{
+          if(!cell){
+            const d=document.createElement("div");
+            d.className="day blank";
+            daysEl.appendChild(d);
+            return;
+          }
+          const key=cell.key;
+          const count=badgeCount(key);
+          const pv=previews(key,maxPv);
+          const d=document.createElement("div");
+          d.className="day" + (todayKey && key===todayKey ? " today":"");
+          d.innerHTML = `
+            <div class="dtop">
+              <div class="dnum">${cell.day}</div>
+              <div class="badge ${count? "show":""}">${count}</div>
+            </div>
+            <div class="previews">
+              ${pv.map(t=>`<div class="preview ${t.status==="done"?"done":""}" style="--c:${escapeAttr(t.color||DEFAULT_COLOR)}">${escapeHtml(t.title)}</div>`).join("")}
+            </div>
+          `;
+          d.addEventListener("click", ()=> openDrawerForDate(key));
+          d.addEventListener("pointerdown", ()=> startLongPress(key));
+          d.addEventListener("pointerup", cancelLongPress);
+          d.addEventListener("pointercancel", cancelLongPress);
+          daysEl.appendChild(d);
+        });
+        body.querySelector("[data-openmonth='1']").onclick = ()=>{
+          state.monthIndex = mi;
+          monthSel.value=String(mi);
+          setActiveTab("month");
+          state.currentView="month";
+          render();
+        };
+      }
+      list.appendChild(row);
+    });
+  }
+
+  function renderTasks(){
+    const rows=[];
+    for(const k of Object.keys(state.tasksByDate)){
+      if(!isValidKeyForYear(k, YEAR)) continue;
+      for(const t of (state.tasksByDate[k]||[])){
+        if(taskMatches(t, state.query, state.filter)) rows.push({dateKey:k, task:t});
+      }
+    }
+    rows.sort((a,b)=>{
+      if(a.dateKey<b.dateKey) return -1;
+      if(a.dateKey>b.dateKey) return 1;
+      const ta=a.task.time||"99:99", tb=b.task.time||"99:99";
+      if(ta<tb) return -1;
+      if(ta>tb) return 1;
+      return (a.task.createdAt||0)-(b.task.createdAt||0);
+    });
+    const grouped = rows.reduce((acc,r)=>{ (acc[r.dateKey] ||= []).push(r.task); return acc; }, {});
+    const keys = Object.keys(grouped).sort();
+
+    page.innerHTML = `
+      <div class="card">
+        <div class="cardHead">
+          <p class="h">Tasks</p>
+          <p class="s">${rows.length} matching</p>
+        </div>
+        <div style="padding:12px" id="tasksBody"></div>
+      </div>
+    `;
+    const body=$("tasksBody");
+    if(!rows.length){
+      body.innerHTML = `<div class="pill" style="border-style:dashed;color:var(--muted)">No tasks match current search/filter.</div>`;
+      return;
+    }
+    keys.forEach(k=>{
+      const gt=document.createElement("div");
+      gt.className="groupTitle";
+      gt.textContent=k;
+      body.appendChild(gt);
+      grouped[k].forEach(t=>{
+        const el=document.createElement("div");
+        el.className="task";
+        el.style.setProperty("--c", t.color||DEFAULT_COLOR);
+        el.innerHTML = `
+          <div style="min-width:0;flex:1">
+            <p class="taskTitle">${escapeHtml(t.title)}</p>
+            <p class="taskSub">
+              <span class="pill">${t.status==="todo"?"To-do":t.status==="doing"?"Doing":"Done"}</span>
+              ${t.time ? `<span class="pill">${escapeHtml(t.time)}</span>` : ""}
+            </p>
+            ${t.notes ? `<p class="taskNotes">${escapeHtml(t.notes)}</p>` : ""}
+          </div>
+          <div class="pill"><span class="dot" style="--c:${escapeAttr(t.color||DEFAULT_COLOR)}"></span></div>
+        `;
+        el.onclick = ()=> openDrawerForDate(k);
+        body.appendChild(el);
+      });
+    });
+  }
+
+  function renderSettings(){
+    page.innerHTML = `
+      <div class="card">
+        <div class="cardHead">
+          <p class="h">Settings</p>
+          <p class="s">Preferences + data</p>
+        </div>
+        <div style="padding:12px;display:flex;flex-direction:column;gap:10px">
+          <div class="groupTitle" style="margin:0">Task Density</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn ${state.density==="compact"?"primary":""}" id="densC">Compact</button>
+            <button class="btn ${state.density==="comfortable"?"primary":""}" id="densM">Comfortable</button>
+          </div>
+
+          <div class="groupTitle" style="margin:6px 0 0">Status Filter</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            ${["all","todo","doing","done"].map(f=>`<button class="btn ${state.filter===f?"primary":""}" data-fil="${f}">${f==="all"?"All":f==="todo"?"To-do":f==="doing"?"Doing":"Done"}</button>`).join("")}
+          </div>
+
+          <div class="groupTitle" style="margin:6px 0 0">Data</div>
+          <button class="btn" id="exBtn">Export JSON</button>
+          <button class="btn" id="imBtn">Import JSON</button>
+          <button class="btn primary" id="todayBtn">Today</button>
+          <button class="btn" id="clearBtn">Clear All</button>
+        </div>
+      </div>
+    `;
+    $("densC").onclick = ()=>{ state.density="compact"; render(); };
+    $("densM").onclick = ()=>{ state.density="comfortable"; render(); };
+    page.querySelectorAll("[data-fil]").forEach(b=>{
+      b.onclick = ()=>{ state.filter=b.dataset.fil; render(); };
+    });
+    $("exBtn").onclick = exportJSON;
+    $("imBtn").onclick = importJSON;
+    $("todayBtn").onclick = ()=>{
+      const key = todayKey || dateKey(YEAR,1,1);
+      state.monthIndex = parseKey(key).getMonth()+1;
+      monthSel.value=String(state.monthIndex);
+      state.selectedKey = key;
+      openDrawerForDate(key);
+    };
+    $("clearBtn").onclick = clearAll;
+  }
+
+  function setActiveTab(tab){
+    document.querySelectorAll(".tab").forEach(t=>{
+      t.classList.toggle("active", t.dataset.tab===tab);
+    });
+  }
+
+  // HTML escaping
+  function escapeHtml(s){
+    return (s??"").toString()
+      .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;").replaceAll("'","&#39;");
+  }
+  function escapeAttr(s){ return escapeHtml(s).replaceAll("\n","&#10;"); }
+
+  // Initial render
+  render();
 })();
 </script>
+
+<script>
+/* PWA: service worker registration (cache-bust) */
+(function(){
+  if(!('serviceWorker' in navigator)) return;
+  navigator.serviceWorker.register('./sw.js?v=20260113-115506').catch(()=>{});
+  let reloaded=false;
+  navigator.serviceWorker.addEventListener('controllerchange', ()=>{
+    if(reloaded) return; reloaded=true; location.reload();
+  });
+})();
+</script>
+
 </body>
 </html>
