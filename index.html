@@ -1427,6 +1427,43 @@ if(e.key==="/" && !e.metaKey && !e.ctrlKey){
       .replaceAll('"',"&quot;").replaceAll("'","&#39;");
   }
   function escapeAttr(s){ return escapeHtml(s).replaceAll("\n","&#10;"); }
+<script>
+/* ===== AUTO BACKUP (Option B) ===== */
+const BACKUP_KEY = "year_planner_2026_auto_backup";
+
+function saveAutoBackup(data){
+  try{
+    const payload = {
+      year: 2026,
+      savedAt: new Date().toISOString(),
+      tasksByDate: data
+    };
+    localStorage.setItem(BACKUP_KEY, JSON.stringify(payload));
+  }catch(e){}
+}
+
+// Hook into existing save
+const _origSafeSave = safeSave;
+safeSave = function(obj){
+  _origSafeSave(obj);
+  saveAutoBackup(obj);
+};
+
+// Recovery hint
+(function(){
+  const main = localStorage.getItem(STORAGE_KEY);
+  const backup = localStorage.getItem(BACKUP_KEY);
+
+  if(!main && backup){
+    console.warn("Planner data cleared, backup exists.");
+    alert(
+      "Your Safari data was cleared.\n\n" +
+      "A backup exists in this browser.\n" +
+      "Go to Settings → Export JSON to save it now."
+    );
+  }
+})();
+</script>
 
   // Initial render
   render();
