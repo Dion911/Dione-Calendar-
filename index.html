@@ -4,7 +4,7 @@
   <meta charset="utf-8"/>
   <title>2026 Year Planner (Offline iPhone Safe)</title>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <link rel="apple-touch-icon" href="icon-180.png?v=3">
+  <link rel="apple-touch-icon" href="icons/icon-180.png?v=2">
   <style>
     :root{
       --bg:#fff; --text:#000; --muted:#666;
@@ -1427,43 +1427,6 @@ if(e.key==="/" && !e.metaKey && !e.ctrlKey){
       .replaceAll('"',"&quot;").replaceAll("'","&#39;");
   }
   function escapeAttr(s){ return escapeHtml(s).replaceAll("\n","&#10;"); }
-
-/* ===== AUTO BACKUP (Option B) ===== */
-const BACKUP_KEY = "year_planner_2026_auto_backup";
-
-function saveAutoBackup(data){
-  try{
-    const payload = {
-      year: 2026,
-      savedAt: new Date().toISOString(),
-      tasksByDate: data
-    };
-    localStorage.setItem(BACKUP_KEY, JSON.stringify(payload));
-  }catch(e){}
-}
-
-// Hook into existing save
-const _origSafeSave = safeSave;
-safeSave = function(obj){
-  _origSafeSave(obj);
-  saveAutoBackup(obj);
-};
-
-// Recovery hint
-(function(){
-  const main = localStorage.getItem(STORAGE_KEY);
-  const backup = localStorage.getItem(BACKUP_KEY);
-
-  if(!main && backup){
-    console.warn("Planner data cleared, backup exists.");
-    alert(
-      "Your Safari data was cleared.\n\n" +
-      "A backup exists in this browser.\n" +
-      "Go to Settings → Export JSON to save it now."
-    );
-  }
-})();
-</script>
 
   // Initial render
   render();
